@@ -71,15 +71,12 @@ for (let i = 0; i < buttonsText.length; i++){
     buttons[i] = document.createElement("button")
     buttons[i].classList.toggle("calc-btns")
     buttons[i].textContent = buttonsText[i]
-    if (buttonsText[i] === "p"){
-        buttons[i].textContent = "pre"
-    }
     if (buttonsText[i] === "="){
         buttons[i].style.maxWidth = "1000px"
         buttons[i].style.flexGrow = "2"
         buttons[i].style.backgroundColor = "white"
     }
-    if (includesOperators(buttonsText[i])) buttons[i].style.backgroundColor = "rgb(255, 174, 0)"
+    if ("c<p:x-+.".includes(buttonsText[i])) buttons[i].style.backgroundColor = "rgb(255, 174, 0)"
     //add a row div every 4 buttons
     if (i % 4 == 0){
         buttonsDiv[i/4] = document.createElement("div")
@@ -87,41 +84,32 @@ for (let i = 0; i < buttonsText.length; i++){
         btnsDiv.appendChild(buttonsDiv[i/4])
     }
     buttonsDiv[Math.floor([i/4])].appendChild(buttons[i])
-    //shouldn't be here. make another loop for the main workflow.
-    buttons[i].addEventListener("click", doEverything)
+
 }
 
-body.addEventListener("keydown", (e) => {
-    if (buttonsTextNoSpace.includes(e.key)) doEverything(e)
-})
+//clear everything except variables from "pre" family like preFirstNum
+function clearEverything(){
+    firstNum = ""
+    firstNumPoint = false
+    operator = ""
+    secondNum = ""
+    secondNumPoint = false
+    displayDiv.textContent = "0"
+    result = null
+}
 
-
-
-
+//Main workflow
 function doEverything (e) {
     //click or keydown
     if (e.key) currentDisplay = e.key
     else currentDisplay = e.target.textContent
     //special cases that involve clearing or changing data
-    if (currentDisplay == "c"){
-        firstNum = ""
-        firstNumPoint = false
-        operator = ""
-        secondNum = ""
-        secondNumPoint = false
-        displayDiv.textContent = "0"
-        result = null
-    }
-    if ((result || result === 0) && (includesDigits(currentDisplay) ||
-        currentDisplay === ".")){
-        firstNum = ""
-        firstNumPoint = false
-        operator = ""
-        secondNum = ""
-        secondNumPoint = false
-        displayDiv.textContent = "0"
-        result = null
-    }
+    if (currentDisplay == "c"||
+        ((result || result === 0) && (includesDigits(currentDisplay) ||
+        currentDisplay === "."))){
+        clearEverything()
+        }
+
     if ((result || result === 0) && (includesOperators(currentDisplay)||
         currentDisplay === "<")){
         firstNum = result.toString()
@@ -131,7 +119,7 @@ function doEverything (e) {
         result = null
     }
 
-    if (currentDisplay === "p"){
+    if (currentDisplay === "p" && preFirstNum){
         [preFirstNum, firstNum] = [firstNum, preFirstNum];
         [preOperator, operator] = [operator, preOperator];
         [preSecondNum, secondNum] = [secondNum, preSecondNum];
@@ -145,11 +133,13 @@ function doEverything (e) {
     if (firstNum && !secondNum && includesOperators(currentDisplay)) operator = currentDisplay 
     if (operator && includesDigits(currentDisplay)) secondNum += currentDisplay
     if (currentDisplay === "."){
-        if (!firstNumPoint && !operator){
-            firstNum += "."
+        if (!firstNumPoint && !operator) {
+            if (!firstNum) firstNum += "0."
+            else firstNum += "."
             firstNumPoint = true
         } else if (operator && !secondNumPoint){
-            secondNum += "."
+            if (!secondNum) secondNum += "0."
+            else secondNum += "."
             secondNumPoint = true
         }
     }
@@ -159,10 +149,12 @@ function doEverything (e) {
         else if (firstNum) firstNum = firstNum.slice(0, -1)
     }
     if (secondNum && includesOperators(currentDisplay)) {
-        // toPrecision(12 specifically) is to avoid 0.6*3 = 1.7999999... (12 digits) and parseFloat it to remove 0s
         preFirstNum = firstNum
         preOperator = operator
         preSecondNum = secondNum
+        // toPrecision(12 specifically) is to avoid 0.6*3 = 1.7999999... (12 digits)
+        // which is a well known bug in programming languages engines math calculations
+        // with floating point. and parseFloat is to remove 0s.
         firstNum = parseFloat((operate(firstNum, operator, secondNum)).toPrecision(12))
         operator = currentDisplay
         secondNum = ""
@@ -172,18 +164,23 @@ function doEverything (e) {
 
     // Make data visible
     allTogether = firstNum + operator + secondNum
-
     if (isTooLong((allTogether))) {
         displayDiv.textContent = "17+ TOO LONG"
-        
     } else if (secondNum && currentDisplay == "="){
         preFirstNum = firstNum
         preOperator = operator
         preSecondNum = secondNum
         result = operate(firstNum, operator, secondNum)
+        //toPrecision & parseFloat explained above
         displayDiv.textContent = parseFloat(result.toPrecision(12))
     } else if (firstNum) {
-        displayDiv.textContent = allTogether
+        if (secondNum === "0") {
+            preFirstNum = firstNum
+            preOperator = operator
+            preSecondNum = ""
+            clearEverything()
+            displayDiv.textContent = "Undefined"
+        } else displayDiv.textContent = allTogether
     } else displayDiv.textContent = "0"
 
     if ((displayDiv.textContent).length > 8){
@@ -192,3 +189,12 @@ function doEverything (e) {
         displayDiv.style.overflowX = ""
     }
 }
+
+
+//Event listeners
+for (let i = 0; i < buttonsText.length; i++) {
+    buttons[i].addEventListener("click", doEverything)
+}
+body.addEventListener("keydown", (e) => {
+    if (buttonsTextNoSpace.includes(e.key)) doEverything(e)
+})
