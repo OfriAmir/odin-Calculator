@@ -12,7 +12,9 @@ function divide(a, b){
 }
 
 let firstNum = ""
+let firstNumPoint
 let secondNum = ""
+let secondNumPoint 
 let operator = ""
 let allTogether
 let result
@@ -35,7 +37,7 @@ function operate(a, op, b){
     }
 }
 function isTooLong(str) {
-    return str.length > 9
+    if (str.includes(".")) return str.length > 9
 }
 function roundToNinthDigit(str) {
     const lastTwo = +str.slice(9, 11)
@@ -43,7 +45,7 @@ function roundToNinthDigit(str) {
     return str.slice(0, 8) + rounded.toString()
 }
 function includesDigits (str) {
-    return ["0","1","2","3","4","5","6","7","8","9"].includes(str)
+    return ["0","1","2","3","4","5","6","7","8","9",].includes(str)
 }
 
 function includesOperators (str) {
@@ -70,15 +72,19 @@ for (let i = 0; i < buttonsText.length; i++){
         if (e.target.textContent == "c" ||
         (result && includesDigits(e.target.textContent))){
             firstNum = ""
+            firstNumPoint = false
             operator = ""
             secondNum = ""
+            secondNumPoint = false
             displayDiv.textContent = "0"
             result = 0
         }
-        if (result && includesDigits(e.target.textContent)){
+        if (result && (includesDigits(e.target.textContent) || e.target.textContent === ".")){
             firstNum = ""
+            firstNumPoint = false
             operator = ""
             secondNum = ""
+            secondNumPoint = false
             displayDiv.textContent = "0"
             result = 0
         }
@@ -86,19 +92,31 @@ for (let i = 0; i < buttonsText.length; i++){
             firstNum = result
             operator = ""
             secondNum = ""
+            secondNumPoint = false
             result = 0
         }
         //accepts only 6 digits per operand which it shouldn't. also the 4th if creates
         //firstNum with more than 6 digits.
         //gets stuck when an operand reaches 6 digits.
-        if (!operator && includesDigits(e.target.textContent)) firstNum += e.target.textContent;
+        if (!operator && includesDigits(e.target.textContent)){
+            firstNum += e.target.textContent;
+        }
         if (firstNum && !operator && includesOperators(e.target.textContent)) operator = e.target.textContent 
         if (operator && includesDigits(e.target.textContent)) secondNum += e.target.textContent
+        if (e.target.textContent === "."){
+            if (!firstNumPoint && !operator){
+                firstNum += "."
+                firstNumPoint = true
+            } else if (operator && !secondNumPoint){
+                secondNum += "."
+                secondNumPoint = true
+            }
+        }
         if ((displayDiv.textContent).length > 20) {
             firstNum = ""
             operator = ""
             secondNum = ""
-            displayDiv.textContent = "TOO LONG"
+            displayDiv.textContent = "20+ TOO LONG"
             result = 0
         }
         if (secondNum && includesOperators(e.target.textContent)) {
@@ -120,8 +138,5 @@ for (let i = 0; i < buttonsText.length; i++){
         } else {
             displayDiv.style.overflowX = ""
         }
-
-        
-        //displayDiv.textContent = firstNum + operator + secondNum
     })
 }
