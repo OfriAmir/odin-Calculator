@@ -94,7 +94,7 @@ for (let i = 0; i < buttonsText.length; i++){
         if (!operator && includesDigits(e.target.textContent)) firstNum += e.target.textContent;
         if (firstNum && !operator && includesOperators(e.target.textContent)) operator = e.target.textContent 
         if (operator && includesDigits(e.target.textContent)) secondNum += e.target.textContent
-        if ((displayDiv.textContent).length > 15) {
+        if ((displayDiv.textContent).length > 20) {
             firstNum = ""
             operator = ""
             secondNum = ""
