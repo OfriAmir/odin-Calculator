@@ -8,11 +8,11 @@ body{
 .calculator{
     background-color:aquamarine;
     width: 400px;
-    height: 800px;
     display: flex;
     flex-direction: column;
     justify-content: space-around;
     padding: 16px;
+    gap: 16px;
 }
 
 .display-div{
