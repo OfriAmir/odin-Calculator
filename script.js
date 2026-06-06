@@ -57,51 +57,52 @@ const btnsDiv = document.querySelector(".btns-div")
 const displayDiv = document.querySelector(".display-div")
 const buttons = []
 const buttonsDiv = []
-const buttonsText = "c  :123x456-789+0.="
+const buttonsText = "c< :123x456-789+0.="
 for (let i = 0; i < buttonsText.length; i++){
     buttons[i] = document.createElement("button")
     buttons[i].classList.toggle("calc-btns")
     buttons[i].textContent = buttonsText[i]
+    //add a row div every 4 buttons
     if (i % 4 == 0){
         buttonsDiv[i/4] = document.createElement("div")
         buttonsDiv[i/4].classList.toggle("btns-row-div")
         btnsDiv.appendChild(buttonsDiv[i/4])
     }
     buttonsDiv[Math.floor([i/4])].appendChild(buttons[i])
+
+
     buttons[i].addEventListener("click", (e) => {
-        if (e.target.textContent == "c" ||
-        (result && includesDigits(e.target.textContent))){
+        if (e.target.textContent == "c"){
             firstNum = ""
             firstNumPoint = false
             operator = ""
             secondNum = ""
             secondNumPoint = false
             displayDiv.textContent = "0"
-            result = 0
+            result = null
         }
-        if (result && (includesDigits(e.target.textContent) || e.target.textContent === ".")){
+        if ((result || result === 0) && (includesDigits(e.target.textContent) ||
+            e.target.textContent === "." ||
+            e.target.textContent === "<")){
             firstNum = ""
             firstNumPoint = false
             operator = ""
             secondNum = ""
             secondNumPoint = false
             displayDiv.textContent = "0"
-            result = 0
+            result = null
         }
         if (result && includesOperators(e.target.textContent)){
             firstNum = result
             operator = ""
             secondNum = ""
             secondNumPoint = false
-            result = 0
+            result = null
         }
-        //accepts only 6 digits per operand which it shouldn't. also the 4th if creates
-        //firstNum with more than 6 digits.
-        //gets stuck when an operand reaches 6 digits.
         if (!operator && includesDigits(e.target.textContent)){
             firstNum += e.target.textContent;
         }
-        if (firstNum && !operator && includesOperators(e.target.textContent)) operator = e.target.textContent 
+        if (firstNum && !secondNum && includesOperators(e.target.textContent)) operator = e.target.textContent 
         if (operator && includesDigits(e.target.textContent)) secondNum += e.target.textContent
         if (e.target.textContent === "."){
             if (!firstNumPoint && !operator){
@@ -112,27 +113,35 @@ for (let i = 0; i < buttonsText.length; i++){
                 secondNumPoint = true
             }
         }
-        if ((displayDiv.textContent).length > 20) {
+        if (e.target.textContent === "<"){
+            if (secondNum) secondNum = secondNum.slice(0, -1)
+            else if (operator) operator = ""
+            else if (firstNum) firstNum = firstNum.slice(0, -1)
+        }
+        if ((displayDiv.textContent).length > 17) {
             firstNum = ""
             operator = ""
             secondNum = ""
-            displayDiv.textContent = "20+ TOO LONG"
-            result = 0
+            displayDiv.textContent = "17+ TOO LONG"
+            result = null
         }
         if (secondNum && includesOperators(e.target.textContent)) {
-            firstNum = operate(firstNum, operator, secondNum)
+            // toPrecision is to avoid 0.6*3 = 1.7999999 and parseFloat it to remove 0s
+            firstNum = parseFloat((operate(firstNum, operator, secondNum)).toPrecision(12))
             //if (isTooLong(firstNum)) firstNum = roundToNinthDigit(firstNum)
             operator = e.target.textContent
             secondNum = ""
         }
+
         if (secondNum && e.target.textContent == "="){
-            result = operate(firstNum, operator, secondNum).toString()
+            result = operate(firstNum, operator, secondNum)
             //if (isTooLong(result)) result = roundToNinthDigit(result)
-            displayDiv.textContent = result
+            displayDiv.textContent = parseFloat(result.toPrecision(12))
         } else if (firstNum) {
             allTogether = firstNum + operator + secondNum
             displayDiv.textContent = allTogether
-        }
+        } else displayDiv.textContent = "0"
+
         if ((displayDiv.textContent).length > 9){
             displayDiv.style.overflowX = "scroll"
         } else {

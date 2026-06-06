@@ -38,8 +38,11 @@ body{
 .calc-btns{
     flex-grow: 1;
     max-height: 66.3px;
+    max-width: 66.3px;
     margin: 16px;
     background-color: red;
     border-radius: 50px;
 }
+
+
 
